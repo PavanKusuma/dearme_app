@@ -1,0 +1,61 @@
+{
+  "Happy": [
+    "Joy",
+    "Contentment",
+    "Satisfaction",
+    "Thrill",
+    "Elation",
+    "Cheerfulness",
+    "Bliss",
+    "Pride"
+  ],
+  "Sad": [
+    "Sorrow",
+    "Grief",
+    "Melancholy",
+    "Woe",
+    "Despair",
+    "Disappointment",
+    "Regret",
+    "Loneliness"
+  ],
+  "Fear": [
+    "Anxiety",
+    "Terror",
+    "Dread",
+    "Trepidation",
+    "Panic",
+    "Horror",
+    "Alarm",
+    "Apprehension"
+  ],
+  "Disgust": [
+    "Contempt",
+    "Revulsion",
+    "Detestation",
+    "Abhorrence",
+    "Loathing",
+    "Distaste",
+    "Aversion"
+  ],
+  "Anger": [
+    "Irritation",
+    "Fury",
+    "Rage",
+    "Wrath",
+    "Hostility",
+    "Exasperation",
+    "Outrage",
+    "Annoyance"
+  ],
+  "Surprise": [
+    "Shock",
+    "Astonishment",
+    "Amazement",
+    "Wonder",
+    "Awe",
+    "Startlement",
+    "Stupor",
+    "Bewilderment"
+  ]
+}
