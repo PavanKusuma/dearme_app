@@ -9,6 +9,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:psych_app/background_app.dart';
+import 'package:psych_app/modal/admin_user.dart';
+import 'package:psych_app/modal/timeslot.dart';
+import 'package:psych_app/util/divider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:psych_app/util/api_urls.dart';
 // import 'package:psych_app/util/appheader.dart';
@@ -58,11 +61,21 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
   bool isLoading = false;
   int foodCount = 0;
   int isAllowed = 1;
+  bool isDataAvailable = false;
+  String emptyStateMsg = '';
+  List<AdminUser> list = [];
+  List<AdminUser> oldList = [];
+  List<TimeSlot> timeSlotslist = [];
+  late AdminUser selectedAdminUser;
+  bool adminSelected = false;
+  int selectedTimeSlotIndex = 0;
+  TimeSlot? selectedSlot;
+  bool gettingDates = false;
 
   // String appointmentDate = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now()).toString();
   
 
-  bool checkBlockedDates = true; // check blocked dates always the user gets to this page.
+  bool checkBlockedDates = false; // check blocked dates always the user gets to this page.
   int _selectedValue = 1;
   // audio element to play sound
   AudioPlayer player = AudioPlayer();
@@ -70,6 +83,7 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
   late AnimationController _animationController;
   late Animation<double> _animation, sizeAnimation;
   bool containerWidth = true;
+  bool connectionStatus = true;
 
 
   // List<Visitor> visitors = [];
@@ -120,20 +134,12 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
         guardianPhoneNumber = preferences.getString(Constants.guardianPhoneNumber);
         guardian2Name = preferences.getString(Constants.guardian2Name);
         guardian2PhoneNumber = preferences.getString(Constants.guardian2PhoneNumber);
-
-        // visitors.add(Visitor(name:fatherName,phoneNumber: fatherPhoneNumber,relation: 'Father'));
-        
-        // (motherName!.length > 1) ? visitors.add(Visitor(name:motherName,phoneNumber: motherPhoneNumber,relation: 'Mother')) : null;
-        // (guardianName!.length > 1) ? visitors.add(Visitor(name:guardianName,phoneNumber: guardianPhoneNumber,relation: 'Guardian')) : null;
-        // (guardian2Name!.length > 1) ? visitors.add(Visitor(name:guardian2Name,phoneNumber: guardian2PhoneNumber,relation: 'Guardian 2')) : null;
     
       });
     }
 
-    // get official dates to show in the calendar
-    // getOfficialDates();
-    // blockedDates1 = widget.blockedDates;
-    // allowedDates1 = widget.allowedDates;
+    getAvailableAdminsData();
+    
   }
 
   void refreshWidget(){
@@ -142,111 +148,223 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
     });
   }
 
-// add and remove the selected branches from the list
-// void onVisitorSelected(Visitor option) {
+  void getAvailableAdminsData() async {
 
-//   setState(() {
-//     if (selectedVisitors.contains(option)) {
-//       foodCount = selectedVisitors.length - 1;
-//       selectedVisitors.remove(option);
-
-//       if(option.relation == 'Father' || option.relation == 'Mother' || option.relation == 'Guardian' || option.relation == 'Guardian 2'){
-//         ActualSelectedVisitors.remove(option);
-//       }
-//     } else {
-//       // foodCount = selectedVisitors.length + 1;
-//       selectedVisitors.add(option);
+    if(await checkInternetConnectivity()){
       
-//       if(option.relation == 'Father' || option.relation == 'Mother' || option.relation == 'Guardian' || option.relation == 'Guardian 2'){
-//         ActualSelectedVisitors.add(option);
-//       }
+      // set connection status variable to true
+      setState(() {
+        connectionStatus = true;
+        isLoading = true;
+      });
       
-//     }
-//   });
-// }
 
+      // query parameters    
+      Map<String, String> queryParams = {};
 
+      // API call
+      // print("${APIUrls.calendar}${APIUrls.pass}/$role/1/$collegeId/$campusId");
+      var result = await get(Uri.parse(APIUrls.getUrl("${APIUrls.calendar}${APIUrls.pass}/$role/1/$collegeId/$campusId", queryParams)), headers: {"Accept": "application/json"});
+      // print(result.body);
+      
+      // get the result body which is JSON
+      var jsonString = jsonDecode(result.body); 
+      
+      // convert jsonString to Map
+      var jsonObject = jsonString as Map; 
 
-  /// The method for [DateRangePickerSelectionChanged] callback, which will be
-  /// called whenever a selection changed on the date picker widget.
-  void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
-    /// The argument value will return the changed date as [DateTime] when the
-    /// widget [SfDateRangeSelectionMode] set as single.
-    ///
-    /// The argument value will return the changed dates as [List<DateTime>]
-    /// when the widget [SfDateRangeSelectionMode] set as multiple.
-    ///
-    /// The argument value will return the changed range as [PickerDateRange]
-    /// when the widget [SfDateRangeSelectionMode] set as range.
-    ///
-    /// The argument value will return the changed ranges as
-    /// [List<PickerDateRange] when the widget [SfDateRangeSelectionMode] set as
-    /// multi range.
-    /// 
-    
-    // List<DateTime> dateList = [];
-    setState(() {
-      if (args.value is PickerDateRange) {
-        // dateList.add(args.value.startDate);
-        // dateList.add(args.value.endDate);
-        
+      List<AdminUser> list1;
+      // check if the api returned success
+      if(jsonObject['status'] == 200){
+        // get the list data from jsonObject
+        var requests = jsonObject['data'] as List;
+
+        if(requests.isNotEmpty){
+          // convert to list
+          list1 = requests.map<AdminUser>((json) => AdminUser.fromJson(json)).toList();
+
+          if(list1.isNotEmpty){
+            // update the list items and toggle the loading
             setState(() {
-              fromDate = args.value.startDate;
-              if(args.value.endDate == null){
-                toDate = args.value.startDate;
-              }
-              else {
-                toDate = args.value.endDate;
+              list.clear();
+              oldList.clear();
+              list.addAll(list1);
 
-                DateTime f = DateTime.parse(fromDate.toString());
-                DateTime t = DateTime.parse(toDate.toString());
-
-                DateTime from =  DateTime(f.year, f.month, f.day);
-                DateTime to =  DateTime(t.year, t.month, t.day);
-
-                // condition to check if blockedDate exists between the selected duration
-                // for (var element in widget.blockedDates) {
-                //   if(element.isAfter(from) && element.isBefore(to)){
-                    
-                //     // this means, there is atleast one blocked date in the duration selected
-                //     isAllowed = false;
-                //     break;
-                //   }
-                //   else {
-
-                //     // this means, there is no blocked date in the duration selected
-                //     isAllowed = true;
-                //   }
-                // }
-              }
-
-
-              days = toDate.difference(fromDate).inDays + 1;
+              
+              isLoading = false;
+              isDataAvailable = true;
             });
-            // ' ${DateFormat('dd/MM/yyyy').format(args.value.endDate ?? args.value.startDate)}';
-      } else if (args.value is DateTime) {
-        
-        setState(() {
-          
-          fromDate = args.value;
-          toDate = args.value;
-          days = fromDate.difference(fromDate).inDays + 1;
-        });
-      } 
-      // else if (args.value is List<DateTime>) {
-      //   _dateCount = args.value.length.toString();
-      // } else {
-      //   _rangeCount = args.value.length.toString();
-      // }
-    });
+          }
+          else {
+            // no requests
+            setState(() {
+              emptyStateMsg = 'No pending requests';
+              isLoading = false;
+              isDataAvailable = false;
+            });
+          }
 
-            // setState(() {
-            //   days = toDate.difference(fromDate).inDays + 1;
-            // });
-    // return dateList;
+        }
+        else {
+          // no requests
+          setState(() {
+            emptyStateMsg = 'No pending requests';
+            isLoading = false;
+            isDataAvailable = false;
+          });
+        }
+
+      
+      }
+      else {
+          // no requests
+          setState(() {
+            emptyStateMsg = 'No pending requests';
+            isLoading = false;
+            isDataAvailable = false;
+          });
+        }
+    }
+    else {
+        Future.delayed(const Duration(seconds: 2), () {
+
+          // this is to check for retrying only once more. Else it will end the loop
+          if(connectionStatus)
+          {
+            getAvailableAdminsData();
+            // print('Again trying');
+          
+            // set the connection Status variable to false
+            setState(() {
+              connectionStatus = false;
+              isLoading = false;
+              isDataAvailable = false;
+            });
+          }
+        });
+      }
   }
 
+  // get free slots of selceted Admin
+  void getAdminFreeSlotsData() async {
 
+    if(await checkInternetConnectivity()){
+      
+      // set connection status variable to true
+      setState(() {
+        connectionStatus = true;
+        gettingDates = true;
+      });
+      
+
+      // query parameters    
+      Map<String, String> queryParams = {};
+
+
+      // add time to the date
+      DateTime fromDate1 = DateTime(
+        fromDate.year,
+        fromDate.month,
+        fromDate.day,
+        fromTime!.hour,
+        fromTime!.minute,
+      );
+
+      // API call
+      // print("${APIUrls.calendar}${APIUrls.pass}/$role/2/${selectedAdminUser.collegeId}/${DateFormat('EEEE', 'en_US').format(fromDate1)}/${DateFormat('yyyy-MM-dd', 'en_US').format(fromDate1)}/$campusId");
+      var result = await get(Uri.parse(APIUrls.getUrl("${APIUrls.calendar}${APIUrls.pass}/$role/2/${selectedAdminUser.collegeId}/${DateFormat('EEEE', 'en_US').format(fromDate1)}/${DateFormat('yyyy-MM-dd', 'en_US').format(fromDate1)}/$campusId", queryParams)), headers: {"Accept": "application/json"});
+      // print(result.body);
+      
+      // get the result body which is JSON
+      var jsonString = jsonDecode(result.body); 
+      
+      // convert jsonString to Map
+      var jsonObject = jsonString as Map; 
+
+      List<TimeSlot> list1;
+      // check if the api returned success
+      if(jsonObject['status'] == 200){
+        // get the list data from jsonObject
+        var requests = jsonObject['data'] as List;
+
+        if(requests.isNotEmpty){
+          // convert to list
+          list1 = requests.map<TimeSlot>((json) => TimeSlot.fromJson(json)).toList();
+
+          if(list1.isNotEmpty){
+            // update the list items and toggle the loading
+            setState(() {
+              timeSlotslist.clear();
+              timeSlotslist.addAll(list1);
+
+              
+              gettingDates = false;
+              isDataAvailable = true;
+            });
+          }
+          else {
+            // no requests
+            setState(() {
+              timeSlotslist.clear();
+              emptyStateMsg = 'No pending requests';
+              gettingDates = false;
+              isDataAvailable = false;
+            });
+          }
+
+        }
+        else {
+          // no requests
+          setState(() {
+            timeSlotslist.clear();
+            emptyStateMsg = 'No pending requests';
+            gettingDates = false;
+            isDataAvailable = false;
+          });
+        }
+
+      
+      }
+      else {
+          // no requests
+          setState(() {
+            emptyStateMsg = 'No pending requests';
+            timeSlotslist.clear();
+            gettingDates = false;
+            isDataAvailable = false;
+          });
+        }
+    }
+    else {
+        Future.delayed(const Duration(seconds: 2), () {
+
+          // this is to check for retrying only once more. Else it will end the loop
+          if(connectionStatus)
+          {
+            getAdminFreeSlotsData();
+            // print('Again trying');
+          
+            // set the connection Status variable to false
+            setState(() {
+              connectionStatus = false;
+              gettingDates = false;
+              isDataAvailable = false;
+            });
+          }
+        });
+      }
+  }
+  
+
+  void selectedAdmin(AdminUser adminUser){
+    
+    setState(() {
+      selectedAdminUser = adminUser;
+      adminSelected = true;  
+    });
+    
+  }
+  
   @override
   Widget build(BuildContext context) {
     
@@ -360,7 +478,135 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
               ),
 
                   sizedBox(8),
+                  InkWell(
+                    onTap: () {
+                      // isDataAvailable ? showAdminUsersList(context) : ''; 
+                      list.isNotEmpty ? showAdminUsersList(context) : '';
+                    },
+                    child: 
+
+                            Container(
+                              margin: EdgeInsets.fromLTRB(16, 0, 16, 4),
+                              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                              decoration: BoxDecoration(
+                                    color: const Color(0x66FFFFFF),
+                                    border: Border.all(color: const Color(0xFFFFFFFF)),
+                                    // color: Color(0xFFFFFFFF),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        // color: Colors.black26,
+                                        color: Color(0xCCFFFFFF),
+                                        // color: Color(0xFF080B23),
+                                        offset: Offset(0.0, 0.0),
+                                        blurRadius: 24.0,
+                                        spreadRadius: 0.3,
+                                      ),
+                                    ]
+                                  ),
+                              child: 
+                              Column(
+                                children: [
+                                  
+                                  (adminSelected) ?
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      // Container(
+                                      //   height: 40, 
+                                      //   width: 40, 
+                                      //   alignment: Alignment.center,
+                                      //   //child: list[position].mediaCount == 0 ? Image.network(list[position].userImage) : Text('KP'), 
+                                      //   //child: list[position].mediaCount == 0 ? Image.network('https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png') : styledText(getAcronym(list[position].username), Constants.header3, Constants.lightbg), 
+                                        
+                                      //   decoration: BoxDecoration(
+                                      //     shape: BoxShape.circle, 
+                                      //     color: Palette.appBackgroundSolitude),
+                                      //     child: selectedAdminUser.userImage!.length > 3 ? 
+                                      //       // Image.network('https://smartcampusweb.vercel.app/user_sample.jpeg')
+                                      //       // Image.network(requestItem.userImage!)
+                                      //       Container(
+                                      //             width: 200,
+                                      //             height: 200,
+                                      //             decoration: BoxDecoration(
+                                      //               shape: BoxShape.circle,
+                                      //               image: DecorationImage(
+                                      //                 fit: BoxFit.cover,
+                                      //                 image: NetworkImage(selectedAdminUser.userImage!),
+                                      //               ),
+                                      //             ),
+                                      //           ) 
+                                      //           : 
+                                      //       Text(getAcronym(selectedAdminUser.username!).toUpperCase(), style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, color: Palette.black )), 
+                                          
+                                      //     ),
+                                      
+                                      
+                                      Expanded(
+                                        child: Container(
+                                          // padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+                                        decoration: const BoxDecoration(),
+                                        child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+
+                                                    Text(selectedAdminUser.username!, style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontSize: 20, fontWeight: FontWeight.bold)),
+                                                    
+                                                    
+                                                    // Row(children: [
+                                                    //   Text("${requestItem.collegeId!}  |  ", style: GoogleFonts.inter(textStyle: Theme.of(context).textTheme.bodySmall,)),
+                                                    //   Text(requestItem.branch!, style: GoogleFonts.inter(textStyle: Theme.of(context).textTheme.bodySmall,)),
+                                                    //   Text((requestItem.year != 0) ? "  |  ${requestItem.year} year" : "", style: GoogleFonts.inter(textStyle: Theme.of(context).textTheme.bodySmall,)),
+                                                    //   // Container(
+                                                    //   //   padding: EdgeInsets.all(2),
+                                                    //   //   decoration: BoxDecoration(
+                                                    //   //     // color: Theme.of(context).shadowColor,
+                                                    //   //   borderRadius: BorderRadius.all(Radius.circular(4)),
+                                                    //   //   shape: BoxShape.rectangle, 
+                                                    //   //   color: Palette.appBackgroundSolitude),
+                                                    //   //   child: Text((list[position].outingType!.toLowerCase() == 'yes') ? 'Self permitted' : 'Not self permitted', style: GoogleFonts.inter(textStyle: Theme.of(context).textTheme.bodySmall,)),
+                                                    //   // ),
+                                                      
+                                                    // ],),
+                                                    
+                                                    // Container(
+                                                    //     padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
+                                                    //     decoration: BoxDecoration(
+                                                    //       // color: Theme.of(context).shadowColor,
+                                                    //     borderRadius: const BorderRadius.all(Radius.circular(4)),
+                                                    //     shape: BoxShape.rectangle, 
+                                                    //     color: Palette.appBackgroundSolitude),
+                                                    //     child: Text((requestItem.outingType!.toLowerCase() == 'yes') ? 'Self permitted' : 'Not self permitted', style: GoogleFonts.inter(textStyle: Theme.of(context).textTheme.bodySmall, color: (requestItem.outingType!.toLowerCase() == 'yes') ? Palette.green : Palette.red,)),
+                                                    //   ),
+                                                    //   sizedBox(4),
+
+                                                      
+                                                    
+                                                  ],
+                                        ),),),
+
+                                        Icon(PhosphorIconsRegular.arrowRight)
+                                      ],
+                                    ) : 
+
+                                  Row(
+                                    children: [
+                                      Text('Select a Psychologist', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontWeight: FontWeight.w500, color: Color(0xFF6302E5))),
+                                      isLoading ? AppProgress(height: 24, width: 24) : sizedBox(0)
+                                    ],
+                                  )
+                                ],
+                              )
+                              
+                              
+                            ),
+                  ),          
+                  sizedBox(8),
                   
+                  (adminSelected) ?
                   Container(
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
                     child: Column(
@@ -376,7 +622,7 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
                           
                           child: 
 
-                          checkBlockedDates ? Container(
+                          Container(
                             
                             decoration: BoxDecoration(
                                   color: const Color(0x66FFFFFF),
@@ -395,9 +641,11 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
                             margin: const EdgeInsets.all(8.0),
                             // padding: const EdgeInsets.all(8.0),
                             
-                            child:
+                            child: Column(
+                              children: [
+                                checkBlockedDates ? 
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     
@@ -427,15 +675,21 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
                                       ),
                                     
                                   ],
+                                ) : 
+                                Row(
+                                    children: [
+                                      Text('Select a date', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontWeight: FontWeight.w500, color: Color(0xFF6302E5))),
+                                      isLoading ? AppProgress(height: 24, width: 24) : sizedBox(0)
+                                    ],
+                                  )
+                              ]
                             )
                             
                           )
-                          : const AppProgress(height: 30, width: 30,),
+                          // : const AppProgress(height: 30, width: 30,),
                         ), 
-                      // ),
-                      // Expanded(
-                      //   flex: 1,
-                      //   child: 
+                        
+                      (timeSlotslist.isNotEmpty && !gettingDates ) ?
                         InkWell(
                           onTap: () async  { 
                                 var selectedTime = await _selectedTime(context, fromTime!); 
@@ -465,46 +719,50 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
                             ),
                           ]
                         ),
-                            child: 
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Column(
-                                children: [
-                                  Container(
-                                      alignment: Alignment.center,
-                                      child: Icon(PhosphorIconsLight.clock, size: 32.0, color: Colors.pink),
-                                  ),
-                                  
-                                ],
-                              ),
+                            child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                            Icon(PhosphorIconsLight.clock, size: 32.0, color: Colors.pink),
+                                            SizedBox(width: 8,),
+                                            Text('Select a Time Slot:', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontWeight: FontWeight.bold)),
+                                        ]
+                                    ),
+                                                      
+                                    
+                                    SizedBox(height: 8),
+                                    ...timeSlotslist.map<Widget>((TimeSlot slot) {
+                                      return RadioListTile<TimeSlot>(
+                                        title: Text('${slot.start} - ${slot.end}'),
+                                        value: slot,
+                                        groupValue: selectedSlot,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            selectedSlot = value!;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ],
+                                )
                               
-                              const SizedBox(width: 8,),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  
-                                  Text(fromTime!.format(context), style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontWeight: FontWeight.bold)),
-                                ],
-                              )
-                              
-                            ],
-                          ),
-                          
                           )
-                            ),
+                            )
+                            
+                            : 
+                            (gettingDates) ? AppProgress(height: 24, width: 24) :
+                            (checkBlockedDates ) ? Text('No free slots available. Choose another date', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyMedium, fontWeight: FontWeight.bold))
+                             : sizedBox(0),
                         // ),
                       ],
                         
                   ),
-                  ),
-
-                  // Container(
-                  //   padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
-                    
-                  //   child: Text('Duration: $days Day(s)', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyMedium, color: Palette.textShade1)),
-                  // ),
+                  ) : sizedBox(0),
+                  sizedBox(8),
+                  
 
                   Container(
                     margin: EdgeInsets.fromLTRB(16, 0, 16, 4),
@@ -591,7 +849,7 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
                   //       ),
                   //   ),
 
-                    isLoading? sizedBox(0) : 
+                    (timeSlotslist.isEmpty && selectedSlot!=null)? sizedBox(0) : 
                       Container(
                         margin: EdgeInsets.all(16),
                         child: ElevatedButton(
@@ -672,9 +930,7 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
     }
 
 
-
-  // show QR bottom sheet
-  dateRangeSelect(BuildContext context){
+  showAdminUsersList(BuildContext context){
     showModalBottomSheet(
       //enableDrag: true,
       isScrollControlled: true,
@@ -683,140 +939,69 @@ class AppointmentNewState extends State<AppointmentNew> with SingleTickerProvide
         builder: (BuildContext context){
           return 
           Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              sizedBox(16),
-              Container(
-                alignment: Alignment.center,
-                height: 6.0,
-                width: 40.0,
-                decoration: BoxDecoration(
-                  color: Palette.text3Dark,
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-              ),
+              sizedBox(64),
+              // Container(
+              //   alignment: Alignment.center,
+              //   height: 1.0,
+              //   // width: 40.0,
+              //   decoration: BoxDecoration(
+              //     color: Colors.black12,
+              //     borderRadius: const BorderRadius.all(Radius.circular(10)),
+              //   ),
+              //   margin: const EdgeInsets.only(left: 10.0, right: 10.0),
+              // ),
               sizedBox(32),
 
-                  // (widget.allowedDates.isNotEmpty) ? Container(
-                    
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).shadowColor,
-                  //           borderRadius: const BorderRadius.all(Radius.circular(8))
-                  //         ),
-                  //         margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  //         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-                  //         child:  
-                  //         Row(
-                  //           mainAxisAlignment: MainAxisAlignment.start,
-                  //           crossAxisAlignment: CrossAxisAlignment.center,
-                  //           mainAxisSize: MainAxisSize.max,
-                  //           children: <Widget>[
-                  //             Icon(PhosphorIcons.checkCircleBold, size: 12.0, color: Palette.blue),
-                  //             const SizedBox(width: 4),
-                  //             Flexible(
-                  //               child:
-                  //                 Text('Official outing days are shown in blue on calendar', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.caption,)),
-                                
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ) : sizedBox(0),
-
-                  // (widget.blockedDates.isNotEmpty) ? Container(
-                    
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).shadowColor,
-                  //           borderRadius: const BorderRadius.all(Radius.circular(8))
-                  //         ),
-                  //         margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  //         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-                  //         child:  
-                  //         Row(
-                  //           mainAxisAlignment: MainAxisAlignment.center,
-                  //           crossAxisAlignment: CrossAxisAlignment.center,
-                  //           mainAxisSize: MainAxisSize.max,
-                  //           children: <Widget>[
-                  //             Icon(PhosphorIcons.prohibitBold, size: 12.0, color: Palette.red,),
-                  //             const SizedBox(width: 4),
-                  //             Flexible(
-                  //               child:
-                  //                 Text('Some days are blocked by your management for outing. You can anyway submit the request.', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.caption,)),
-                                
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ) : sizedBox(0),
-                      
-              sizedBox(16),
-             
               Expanded(
                 child: 
-                SfDateRangePicker(
-                  todayHighlightColor: Palette.accent,
-                                  onSelectionChanged: _onSelectionChanged,
-  
-                                  selectionMode: DateRangePickerSelectionMode.single,
-                                  view: DateRangePickerView.month,
-                                  monthViewSettings: DateRangePickerMonthViewSettings(blackoutDates: [DateTime(2020, 03, 26)],
-                                  // weekendDays: const [7],
-                                  // specialDates:blockedDates,
-                                  showTrailingAndLeadingDates: true),
-                                  
-
-                                  // selection styling
-                                  startRangeSelectionColor: Palette.green,
-                                  endRangeSelectionColor: Palette.green,
-                                  rangeSelectionColor: Palette.green.withOpacity(0.4),
-                                  selectionRadius: 10,
-                                  selectionShape: DateRangePickerSelectionShape.circle,
-                                  cellBuilder: cellBuilder,
-                                  // cellBuilder: cellBuilder(context,  DateRangePickerCellDetails c, allowedDates, blockedDates),
-
-                                  monthCellStyle: DateRangePickerMonthCellStyle(
-                                    blackoutDatesDecoration: BoxDecoration(
-                                        color: Colors.red,
-                                        border: Border.all(color: const Color(0xFFF44436), width: 1),
-                                        shape: BoxShape.circle),
-                                    // weekendDatesDecoration: BoxDecoration(
-                                    //     color: const Color(0xFFDFDFDF),
-                                    //     border: Border.all(color: const Color(0xFFB6B6B6), width: 1),
-                                    //     shape: BoxShape.circle),
-                                    specialDatesDecoration: const BoxDecoration(
-                                        color: Color.fromARGB(255, 234, 221, 207),
-                                        // border: Border.all(color: const Color(0xFF2B732F), width: 1),
-                                        shape: BoxShape.circle),
-                                    blackoutDateTextStyle: const TextStyle(color: Colors.white, decoration: TextDecoration.lineThrough),
-                                    specialDatesTextStyle: const TextStyle(color: Colors.black),
-                                  ),
-                                  initialSelectedDate: fromDate,
-                                  // initialSelectedRange: PickerDateRange(fromDate, fromDate), 
-                                  minDate: new DateTime.now(),
-                                  // maxDate: new DateTime.now(),
-                                )
+                Column(
+                  children: list.map((e) => 
+                  InkWell(
+                    onTap: () {
+                      selectedAdmin(e);
+                      Navigator.pop(context);
+                    },
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          child: Text(e.username!, style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, fontSize: 20, color: Color(0xFF6302E5))),
+                        ),
+                        
+                        divider(Colors.black12),
+                      ],
+                    )
+                    
+                  )
+                  ).toList(),
+                )
               
               ),
                 
 
               sizedBox(32),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      MaterialButton(
-                        child: Text("Select", style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyMedium, color: Palette.blue)),
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                        color: Palette.appBackgroundSolitude,
-                        textColor: Palette.black,
-                        splashColor: Palette.textShade2,
-                        colorBrightness: Brightness.light,
-                        shape: const StadiumBorder(),
-                        onPressed: () => Navigator.pop(context),
+                // Row(
+                //     mainAxisAlignment: MainAxisAlignment.center,
+                //     crossAxisAlignment: CrossAxisAlignment.center,
+                //     children: <Widget>[
+                //       MaterialButton(
+                //         child: Text("Select", style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyMedium, color: Palette.blue)),
+                //         padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                //         color: Palette.appBackgroundSolitude,
+                //         textColor: Palette.black,
+                //         splashColor: Palette.textShade2,
+                //         colorBrightness: Brightness.light,
+                //         shape: const StadiumBorder(),
+                //         onPressed: () => Navigator.pop(context),
 
-                      )
+                //       )
 
-                    ],
-                  ),
+                //     ],
+                //   ),
                 
                 sizedBox(16),
                 sizedBox(32),
@@ -847,20 +1032,6 @@ Future<TimeOfDay?> _selectedTime(BuildContext context, TimeOfDay time) => showTi
       
     // query parameters    
     Map<String, String> queryParams = {
-      // "requestId":randomString("R"),
-      // "requestType":widget.requestType,
-      // "collegeId":userObjectId!,
-      // "username":username!,
-      // "branch":branch!,
-      // "year":year.toString(),
-      // "description":descriptionController.text,
-      // "requestFrom":DateFormat('yyyy-MM-dd hh:mm:ss', 'en_US').format(fromDate),
-      // "requestTo":DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(toDate),
-      // "requestDate":"just now",
-      // "timeFrom":fromTime!.hour.toString()+fromTime!.minute.toString(),
-      // "timeTo":toTime!.hour.toString()+toTime!.minute.toString(),
-      // "duration":days.toString(),
-      // "requestStatus": Constants.submitted,
       };
 
       var A = randomString("A");
@@ -870,8 +1041,10 @@ Future<TimeOfDay?> _selectedTime(BuildContext context, TimeOfDay time) => showTi
       fromDate.year,
       fromDate.month,
       fromDate.day,
-      fromTime!.hour,
-      fromTime!.minute,
+      int.parse(selectedSlot!.start.split(':')[0]),
+      int.parse(selectedSlot!.start.split(':')[1]),
+      // fromTime!.hour,
+      // fromTime!.minute,
     );
 
     
@@ -889,6 +1062,8 @@ Future<TimeOfDay?> _selectedTime(BuildContext context, TimeOfDay time) => showTi
         "topic":'-',
         "description":descriptionController.text,
         "requestDate":DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(fromDate1),
+        "startTime":selectedSlot!.start,
+        "endTime":selectedSlot!.end,
         "isOpen":1.toString(),
         "requestStatus":Constants.submitted,
         "notes": '-',
@@ -902,12 +1077,10 @@ Future<TimeOfDay?> _selectedTime(BuildContext context, TimeOfDay time) => showTi
         };
 
       // API call
-      // key, requestId, collegeId, visitOn, description, count, foodCount, requestDate, visitorsList
-      // list of visitors
       // print("${APIUrls.newVisitorpass}${APIUrls.pass}/$V/$userObjectId/${DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(fromDate1)}/${Uri.encodeComponent(descriptionController.text)}/${selectedVisitors.length}/$foodCount/${DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(today)}/$visitorsList/$isAllowed/$username/$parentNumber");
-      var result = await get(Uri.parse(APIUrls.getUrl("${APIUrls.newAppointment}${APIUrls.pass}/$A/$collegeId/-/${Uri.encodeComponent(descriptionController.text)}/${DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(fromDate1)}/0/$campusId", queryParams)), headers: {"Accept": "application/json"});
+      var result = await get(Uri.parse(APIUrls.getUrl("${APIUrls.newAppointment}${APIUrls.pass}/$A/$collegeId/-/${Uri.encodeComponent(descriptionController.text)}/${DateFormat('yyyy-MM-dd HH:mm:ss', 'en_US').format(fromDate1)}/${selectedSlot!.start}/${selectedSlot!.end}/0/$campusId", queryParams)), headers: {"Accept": "application/json"});
       
-      print(result);
+      // print(result);
       // print(APIUrls.getUrl(APIUrls.newRequest, queryParams));
       // get the result body which is JSON
       var jsonString = jsonDecode(result.body); 
@@ -1023,41 +1196,22 @@ void _selectAppointmentDate(BuildContext context){
                     initialSelectedDate: DateTime.parse(DateFormat('yyyy-MM-dd', 'en_US').format(fromDate).toString()),
                     // initialSelectedDate: DateTime.parse(appointmentDate),
                     onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
-                      // Handle the selected date range
-
-                      // print('Clicked');
-                      // print(args);
-                      // print(args.value);
-                      // print(DateFormat('yyyy-MM-dd', 'en_US').format(args.value));
-
                       // set the date to call the stats again
                       setState(() {
                         fromDate = args.value;
+                        checkBlockedDates = true;
                         // appointmentDate = DateFormat('yyyy-MM-dd', 'en_US').format(args.value).toString();
-                      },);
+                      },
+                      
+                        
+                      );
                     },
                   ),
 
-                  // decoration: BoxDecoration(
-                  //                 color: const Color(0x66FFFFFF),
-                  //                 border: Border.all(color: const Color(0xFFFFFFFF)),
-                  //                 // color: Color(0xFFFFFFFF),
-                  //                 borderRadius: BorderRadius.circular(50),
-                  //                 boxShadow: const [
-                  //                   BoxShadow(
-                  //                     // color: Colors.black26,
-                  //                     color: Color(0xCCFFFFFF),
-                  //                     // color: Color(0xFF080B23),
-                  //                     offset: Offset(0.0, 0.0),
-                  //                     blurRadius: 24.0,
-                  //                     spreadRadius: 0.3,
-                  //                   ),
-                  //                 ]
-                  //               ),
 
                  MaterialButton(
                       padding: const EdgeInsets.fromLTRB(18.0, 10.0, 18.0, 10.0),
-                      color: const Color(0xFFFFFFFF),
+                      color: Color(0xFF6302E5),
                       splashColor: Palette.textShade2,
                       colorBrightness: Brightness.light,
                       elevation: 2,
@@ -1079,18 +1233,14 @@ void _selectAppointmentDate(BuildContext context){
                         // }
                         // onSubmit(context);
                           // getFoodStats();
+                          
+                          checkBlockedDates = true;
+                          getAdminFreeSlotsData();
                           Navigator.pop(context);
                       },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(PhosphorIconsLight.paperPlane, size: 12, color: Colors.pink),
-                          const SizedBox(width: 8,),
-                          Text('Select date', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, color: Colors.pink),),
-                        ],
-                      ) 
+                      child: Text('Select date', style: GoogleFonts.dmSans(textStyle: Theme.of(context).textTheme.bodyLarge, color: Colors.white),),
                     ),
+                    sizedBox(16),
               ],)
               
             )
@@ -1101,169 +1251,3 @@ void _selectAppointmentDate(BuildContext context){
   }
 
 }
-
-
-// cell builder helps to construct every date of the calendar
-Widget cellBuilder(BuildContext context, DateRangePickerCellDetails details){
- DateTime visibleDates = details.date;
-
- switch (checkOfficialDateType(visibleDates)) {
-   case Constants.allow:
-     return  Container(
-          // padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-              color: Palette.blue.withOpacity(0.4),
-              border: Border.all(color: Palette.blue.withOpacity(0.4), width: 1),
-              shape: BoxShape.circle),
-              child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                          Text(
-                            details.date.day.toString(),
-                            textAlign: TextAlign.center,
-                          ),
-                      Icon(
-                          PhosphorIcons.checkCircle(PhosphorIconsStyle.bold),
-                          size: 13,
-                          color: Palette.blue,
-                      
-                        ),
-                      ],)
-          );
-    //  break;
-   case Constants.block:
-        return Container(
-                // padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                    color: Palette.red.withOpacity(0.4),
-                    border: Border.all(color: Palette.blue.withOpacity(0.4), width: 1),
-                    shape: BoxShape.circle),
-                    child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                              Text(
-                                details.date.day.toString(),
-                                textAlign: TextAlign.center,
-                              ),
-                          Icon(
-                              PhosphorIcons.prohibit(PhosphorIconsStyle.bold),
-                              size: 13,
-                              color: Palette.red,
-                          
-                            ),
-                ],
-          ));
-     
-    //  break;
-   default: return 
-   // trying to show different colors based on the previous, current and future dates
-                    Center(
-                      child: ( visibleDates.difference(DateTime.now()).inDays < 0) ? Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.all(0),
-                      // decoration:  BoxDecoration(
-                      //                 color: Palette.appBackgroundSolitude,
-                      //                   shape: BoxShape.circle),
-                      child: Text(
-                        details.date.day.toString(),
-                        textAlign: TextAlign.center,
-                      ),
-
-                    ) : ( visibleDates.difference(DateTime.now()).inDays > 0) ? Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.all(0),
-                      decoration:  BoxDecoration(
-                                      color: Palette.appBackgroundSolitude,
-                                        shape: BoxShape.circle),
-                      child: Text(
-                        details.date.day.toString(),
-                        textAlign: TextAlign.center,
-                      )) : 
-                      Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.all(0),
-                      decoration:  BoxDecoration(
-                                      color: Palette.appBackgroundSolitude,
-                                       
-                                        shape: BoxShape.circle),
-                      child: Text(
-                        details.date.day.toString(),
-                        textAlign: TextAlign.center,
-                        
-                      ),
-
-                    )
-                    )
-                  ;
- } 
-}
-
-
-// this function will help to check if any date is 
-// either allowed or blocked date
-// returns a string "Allow" or "Block" or ""
-String checkOfficialDateType(DateTime date) {
-
-  String val = '';
-  
-  if(allowedDates1.length > 0){
-    for (int j = 0; j < allowedDates1.length; j++) {
-      
-        if (date.year == allowedDates1[j].year &&
-            date.month == allowedDates1[j].month &&
-            date.day == allowedDates1[j].day) {
-          // return Constants.allow;
-            { print('yes');
-              val = Constants.allow;
-              break;
-            }
-        }
-
-        for (int k = 0; k < blockedDates1.length; k++) {
-        
-          if (date.year == blockedDates1[k].year &&
-              date.month == blockedDates1[k].month &&
-              date.day == blockedDates1[k].day) {
-            // return Constants.allow;
-              { 
-                val = Constants.block;
-                break;
-              }
-          }  
-        }
-    }
-  }
-  else {
-    for (int k = 0; k < blockedDates1.length; k++) {
-    
-      if (date.year == blockedDates1[k].year &&
-            date.month == blockedDates1[k].month &&
-            date.day == blockedDates1[k].day) {
-        // return Constants.allow;
-          { 
-            val = Constants.block;
-            break;
-          }
-      }
-
-      for (int j = 0; j < allowedDates1.length; j++) {
-      
-        if (date.year == allowedDates1[j].year &&
-          date.month == allowedDates1[j].month &&
-          date.day == allowedDates1[j].day) {
-          // return Constants.allow;
-            { 
-              val = Constants.allow;
-              break;
-            }
-        }  
-      }
-    }
-  }
-
-  
-  return val;
-}
-
-

@@ -564,6 +564,7 @@ class _MyApp2State extends State<MyApp2> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
+    
     super.dispose();
   }
 

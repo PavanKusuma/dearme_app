@@ -7,6 +7,8 @@ class Appointment{
   String? topic;
   String? description;
   String? requestDate;
+  String? startTime;
+  String? endTime;
   int? isOpen;
   String? requestStatus;
   String? notes;
@@ -17,7 +19,7 @@ class Appointment{
 
   // constructor and assign the values locally
   // Campus({this.campusId, this.campusName});
-  Appointment({this.appointmentId, this.collegeId, this.adminId, this.adminName, this.topic, this.description, this.requestDate, this.isOpen, this.requestStatus, 
+  Appointment({this.appointmentId, this.collegeId, this.adminId, this.adminName, this.topic, this.description, this.requestDate, this.startTime, this.endTime, this.isOpen, this.requestStatus, 
   this.notes, this.mode, this.createdOn, this.updatedOn, this.campusId});
 
   factory Appointment.fromJson(Map<String, dynamic> json){
@@ -28,6 +30,8 @@ class Appointment{
       adminName: json["adminName"] as String,
       description: json["description"] as String,
       requestDate: json["requestDate"] as String,
+      startTime: json["startTime"] as String,
+      endTime: json["endTime"] as String,
       isOpen: json["isOpen"] as int,
       requestStatus: json["requestStatus"] as String,
       notes: json["notes"] as String,

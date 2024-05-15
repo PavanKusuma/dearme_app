@@ -325,14 +325,10 @@ super.initState();
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    // Colors.pink.withOpacity(0.3),
-                    // Colors.black.withOpacity(0.3),
-
-                    //  Colors.black45.withOpacity(0.3),
-                    
+                    // Color(0xFFDEED7E).withOpacity(0.9),
+                    // Color(0xFFDEED7E).withOpacity(0.7),
                     Colors.grey.withOpacity(0.3),
                     Colors.grey.withOpacity(0.1),
-                    // Colors.black45.withOpacity(0.3),
                   ],
                 ),
               ),

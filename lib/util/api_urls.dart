@@ -39,6 +39,7 @@ class APIUrls {
     ///// PSYCH //////
     ///// PSYCH //////
     static String newAppointment = 'api/psych/newappointment/'; // new appointment
+    static String calendar = 'api/psych/calendar/'; // calenar
     static String appointments = 'api/psych/appointments/'; // appointments
     static String updateAppointment = 'api/psych/updateappointment/'; // update appointment
     static String chat = 'api/psych/chat/'; // update appointment

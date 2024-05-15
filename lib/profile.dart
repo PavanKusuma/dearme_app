@@ -552,7 +552,7 @@ void getAffirmation1() async {
               },
               child: Container( 
                 decoration: BoxDecoration(
-                      color: Color(0x66FFB800),
+                      color: Color.fromARGB(255, 253, 234, 182),
                       // color: const Color(0x66FFFFFF),
                       border: Border.all(color: const Color(0x99FFB800)),
                       // color: Color(0xFFFFFFFF),
@@ -611,9 +611,9 @@ void getAffirmation1() async {
               },
               child: Container( 
                 decoration: BoxDecoration(
-                      color: Color(0x6662FF00),
+                      color: Color.fromARGB(255, 202, 242, 177),
                       // color: const Color(0x66FFFFFF),
-                      border: Border.all(color: const Color(0x9962FF00)),
+                      border: Border.all(color: Color.fromARGB(255, 81, 210, 0)),
                       // color: Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: const [

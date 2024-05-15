@@ -173,7 +173,14 @@ print(collegeId);
 
       // API call
       // print("${APIUrls.appointments}${APIUrls.pass}/$role/All/$offset/$userObjectId/$campusId");
-      var result = await get(Uri.parse(APIUrls.getUrl("${APIUrls.assessments}${APIUrls.pass}/$role/$offset/$campusId/$collegeId", queryParams)), headers: {"Accept": "application/json"});
+      String query = '';
+      if(role == Constants.student){
+        query = "${APIUrls.assessments}${APIUrls.pass}/$role/$offset/$campusId/$collegeId";
+      }
+      else if(role == Constants.admin){
+        query = "${APIUrls.assessments}${APIUrls.pass}/$role/1/All/$offset/$campusId/$collegeId";
+      }
+      var result = await get(Uri.parse(APIUrls.getUrl(query, queryParams)), headers: {"Accept": "application/json"});
       // print(result.body);
       
       // get the result body which is JSON
@@ -311,14 +318,12 @@ print(collegeId);
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    // Colors.pink.withOpacity(0.3),
-                    // Colors.black.withOpacity(0.3),
-
-                    //  Colors.black45.withOpacity(0.3),
                     
-                    Colors.grey.withOpacity(0.3),
-                    Colors.grey.withOpacity(0.1),
-                    // Colors.black45.withOpacity(0.3),
+                    
+                    Color(0xFFE3CFFF).withOpacity(0.9),
+                    Color(0xFFE3CFFF).withOpacity(1),
+                    // Colors.grey.withOpacity(0.3),
+                    // Colors.grey.withOpacity(0.1),
                   ],
                 ),
               ),

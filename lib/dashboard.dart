@@ -618,15 +618,16 @@ void _animateScale() {
                                 margin: const EdgeInsets.fromLTRB(16,0,16,8),
                                 padding: const EdgeInsets.all(32),
                                  decoration: BoxDecoration(
+                                  color: Color(0xFFDEED7E),
                                     // color: ui.Color(0xFFE4FDFF),
-                                    gradient: const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0xFFBBD900), // Start color of the globe
-                                          Color(0xFFEBFD7E), // End color of the globe
-                                        ],
-                                      ),
+                                    // gradient: const LinearGradient(
+                                    //     begin: Alignment.topCenter,
+                                    //     end: Alignment.bottomCenter,
+                                    //     colors: [
+                                    //       Color(0xFFBBD900), // Start color of the globe
+                                    //       Color(0xFFEBFD7E), // End color of the globe
+                                    //     ],
+                                    //   ),
                                     // border: Border.all(color: const Color(0x44007E86)),
                                     // color: Color(0xFFFFFFFF),
                                     borderRadius: BorderRadius.circular(10),
@@ -702,15 +703,16 @@ void _animateScale() {
                                 margin: const EdgeInsets.fromLTRB(16,0,16,8),
                                 padding: const EdgeInsets.all(32),
                                  decoration: BoxDecoration(
+                                  color: ui.Color(0xFFFFEE8D),
                                     // color: ui.Color(0xFFFEFBE6),
-                                    gradient: const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0xFFFED601), // Start color of the globe
-                                          Color(0xFFFFE891), // End color of the globe
-                                        ],
-                                      ),
+                                    // gradient: const LinearGradient(
+                                    //     begin: Alignment.topCenter,
+                                    //     end: Alignment.bottomCenter,
+                                    //     colors: [
+                                    //       Color(0xFFFED601), // Start color of the globe
+                                    //       Color(0xFFFFE891), // End color of the globe
+                                    //     ],
+                                    //   ),
                                     // border: Border.all(color: const Color(0x44867100)),
                                     // color: Color(0xFFFFFFFF),
                                     borderRadius: BorderRadius.circular(10),
@@ -786,16 +788,17 @@ void _animateScale() {
                                 margin: const EdgeInsets.fromLTRB(16,0,16,8),
                                 padding: const EdgeInsets.all(32),
                                  decoration: BoxDecoration(
+                                  color: ui.Color(0xFFE3CFFF),
                                     // color: ui.Color(0xFFEBDCFF),
                                     // border: Border.all(color: const Color(0x446302E5)),
-                                    gradient: const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0xFFD2B1FF), // Start color of the globe
-                                          Color(0xFFC890FF), // End color of the globe
-                                        ],
-                                      ),
+                                    // gradient: const LinearGradient(
+                                    //     begin: Alignment.topCenter,
+                                    //     end: Alignment.bottomCenter,
+                                    //     colors: [
+                                    //       Color(0xFFD2B1FF), // Start color of the globe
+                                    //       Color(0xFFC890FF), // End color of the globe
+                                    //     ],
+                                    //   ),
                                     // color: Color(0xFFFFFFFF),
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: const [

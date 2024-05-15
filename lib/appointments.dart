@@ -196,6 +196,7 @@ super.initState();
               list.clear();
               oldList.clear();
               list.addAll(list1);
+              showCreateCTA = true;
 
               // segregate between old and new items
               for (var element in list1) {

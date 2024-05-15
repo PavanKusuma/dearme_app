@@ -387,14 +387,11 @@ super.initState();
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    // Colors.pink.withOpacity(0.3),
-                    // Colors.black.withOpacity(0.3),
-
-                    //  Colors.black45.withOpacity(0.3),
                     
-                    Colors.grey.withOpacity(0.3),
-                    Colors.grey.withOpacity(0.1),
-                    // Colors.black45.withOpacity(0.3),
+                    Color(0xFFDEED7E).withOpacity(0.8),
+                    Color(0xFFDEED7E).withOpacity(0.4),
+                    // Colors.grey.withOpacity(0.3),
+                    // Colors.grey.withOpacity(0.1),
                   ],
                 ),
               ),
@@ -489,11 +486,13 @@ super.initState();
                       sizedBox(8),
                       Text('Check-ins', style: GoogleFonts.dmSans(fontSize: 18, color: Colors.black87)), 
                       sizedBox(32),
+                      // Text(moodCounts.toString()),
                       Center(
                         child: CustomPaint(
                           size: Size(200, 200), // You can specify your own size
                           painter: PieChartPainter(
-                            percentages: [moodCounts.containsKey('Positive') ? moodCounts['Positive']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Negative') ? moodCounts['Negative']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Neutral') ? moodCounts['Neutral']!.toDouble()/totalCheckIns : 0.0], // The percentages for the pie chart
+                            percentages: [moodCounts.containsKey('Happy') ? moodCounts['Happy']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Fear') ? moodCounts['Fear']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Sad') ? moodCounts['Sad']!.toDouble()/totalCheckIns : 0.0], // The percentages for the pie chart
+                            // percentages: [moodCounts.containsKey('Positive') ? moodCounts['Positive']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Negative') ? moodCounts['Negative']!.toDouble()/totalCheckIns : 0.0, moodCounts.containsKey('Neutral') ? moodCounts['Neutral']!.toDouble()/totalCheckIns : 0.0], // The percentages for the pie chart
                             // percentages: [0.3, 0.3, 0.4], // The percentages for the pie chart
                           ),
                         ),
