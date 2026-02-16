@@ -13,6 +13,7 @@ import 'package:psych_app/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:psych_app/dashboard.dart';
 import 'package:psych_app/library.dart';
+import 'package:psych_app/tools.dart';
 import 'package:psych_app/util/palette.dart';
 import 'package:psych_app/destination.dart';
 // import 'package:smart_campus/circular_new.dart';
@@ -59,16 +60,13 @@ class _SetUpState extends State<SetUp> with TickerProviderStateMixin<SetUp> {
   int currentIndex = 0;
   final tabPages = [
     const Dashboard(),
-    // const DearMeLibrary(),
-    // const Library(),
     const Appointments(),
+    const Tools(),
     const ChatStart(),
     const Profile(),
   ];
   final tabPagesAdmin = [
     const DashboardAdmin2(),
-    // const DearMeLibrary(),
-    // const Library(),
     const AppointmentsAdmin(),
     const ChatAdmin(),
     const Profile(),
@@ -222,9 +220,8 @@ class _SetUpState extends State<SetUp> with TickerProviderStateMixin<SetUp> {
         },
         // elevation: 18.0,
         
-        items: allDestinations.map((Destination destination) {
+        items: ((role == Constants.admin) ? adminDestinations : allDestinations).map((Destination destination) {
           return BottomNavigationBarItem(
-            // backgroundColor: Palette.appPrimary,
             icon: Icon(destination.icon),
             label: destination.title,
           );

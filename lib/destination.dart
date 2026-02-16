@@ -13,11 +13,15 @@ class Destination {
 
 const List<Destination> allDestinations = <Destination>[
   Destination('Home', PhosphorIconsRegular.houseSimple),
-  // Destination('Learn', PhosphorIconsRegular.list),
-  // Destination('New', Icons.add_circle_outline),
-  //  Destination('Feed', PhosphorIconsRegular.clipboardText),
+   Destination('Book', PhosphorIconsRegular.calendarCheck),
+   Destination('Tools', PhosphorIconsRegular.toolbox),
+   Destination('Chat', PhosphorIconsRegular.chatCircle),
+   Destination('Profile', PhosphorIconsRegular.user)
+];
+
+const List<Destination> adminDestinations = <Destination>[
+  Destination('Home', PhosphorIconsRegular.houseSimple),
    Destination('Book', PhosphorIconsRegular.calendarCheck),
    Destination('Chat', PhosphorIconsRegular.chatCircle),
-  //  Destination('Help', PhosphorIconsRegular.lifebuoy),
    Destination('Profile', PhosphorIconsRegular.user)
 ];

@@ -11,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:psych_app/appointment_new.dart';
 import 'package:psych_app/assessments.dart';
-import 'package:psych_app/background_app.dart';
 import 'package:psych_app/emergency_call.dart';
 import 'package:psych_app/library2.dart';
 import 'package:psych_app/modal/appointment.dart';
@@ -776,70 +775,6 @@ void _animateScale() {
                               )
                             ),
                             
-                            ////
-                            //// RELAX
-                            ////
-                            sizedBox(8),
-                            InkWell(
-                               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RelaxScreen())),
-
-                              child: Container(
-                                margin: const EdgeInsets.fromLTRB(16,0,16,8),
-                                padding: const EdgeInsets.all(32),
-                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFF667eea),
-                                        Color(0xFF764ba2),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0xCCFFFFFF),
-                                        offset: Offset(0.0, 0.0),
-                                        blurRadius: 24.0,
-                                        spreadRadius: 0.3,
-                                      ),
-                                    ]
-                                  ),
-                                child: Container(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: <Widget>[
-
-                                        Expanded( child:
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              Text('Relax', style: GoogleFonts.dmSans(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                                              sizedBox(8),
-                                              Text('Calming Ambient', style: GoogleFonts.dmSans(fontSize: 20, color: Colors.white70)),
-                                              sizedBox(8),
-                                              Text('Play soothing music and unwind with ambient visuals', style: GoogleFonts.dmSans(fontSize: 16, color: Colors.white60)),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16,),
-                                        Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.15),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(PhosphorIconsFill.play, color: Colors.white, size: 36),
-                                        ),
-
-
-                                        ],
-                                      ),
-                                      ),
-                              )
-                            ),
-
                             ////
                             //// SELF ASSESSMENTS
                             ////
