@@ -302,9 +302,9 @@ class LibraryState extends State<Library> with AutomaticKeepAliveClientMixin, Ti
         body: Stack(
           
           children: [
-            Container(
-              child:  BackgroundGradient(),
-            ),
+            // Container(
+            //   child:  BackgroundGradient(),
+            // ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

@@ -310,9 +310,9 @@ class LibraryTopicDetailState extends State<LibraryTopicDetail> with AutomaticKe
         body: Stack(
           
           children: [
-            Container(
-              child:  BackgroundGradient(),
-            ),
+            // Container(
+            //   child:  BackgroundGradient(),
+            // ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

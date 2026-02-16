@@ -45,9 +45,9 @@ class _MoodWheelState extends State<MoodWheel> {
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          Container(
-              child:  BackgroundGradient(),
-            ),
+          // Container(
+          //     child:  BackgroundGradient(),
+          //   ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
